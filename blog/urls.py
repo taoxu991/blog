@@ -21,8 +21,12 @@ from app01 import views as app_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', app_views.log_in),
-    path('logout/', app_views.log_out),
+    path('login/', app_views.log_in, name='login'),
+    path('logout/', app_views.log_out, name='logout'),
+    path('register/', app_views.register, name='register'),
+    path('index/', app_views.index),
+    path('get_valid_img/', app_views.get_valid_img, name='get_valid_img'),
+    re_path(r'^$', app_views.index),
 
     # media配置
     re_path(r'media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT}),

@@ -1,0 +1,18 @@
+#avatar_img,#avatar_file{
+     width: 40px;
+     height: 40px;
+     position: absolute;
+     left: 0;
+     top:0
+ }
+#avatar_file{
+      opacity: 0;
+}
+
+.avatar_box{
+    position: relative;
+    height: 40px;
+}
+#valid_img{
+    float: right;
+}

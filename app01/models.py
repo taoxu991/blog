@@ -12,7 +12,7 @@ class UserInfo(AbstractUser):
     avatar = models.FileField(upload_to='avatar/',default='avatar/default.png')
     create_time = models.DateTimeField(verbose_name='创建时间',auto_now_add=True)
 
-    blog = models.OneToOneField(to='Blog',to_field='nid',null=True,on_delete=models.CASCADE)
+    # blog = models.OneToOneField(to='Blog',to_field='nid',null=True,on_delete=models.CASCADE)
 
     def __str__(self):
         return self.username
@@ -26,6 +26,7 @@ class Blog(models.Model):
     title = models.CharField(verbose_name='个人博客标题',max_length=64)
     site_name = models.CharField(verbose_name='站点名称',max_length=64)
     theme = models.CharField(verbose_name='博客主题',max_length=32)
+    user = models.OneToOneField(to='UserInfo', to_field='nid', null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -39,7 +40,7 @@ class Category(models.Model):
     blog = models.ForeignKey(verbose_name='所属博客', to='Blog', to_field='nid', on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.title
+        return self.title + '-->' + self.blog.user.username
 
 class Tag(models.Model):
     nid = models.AutoField(primary_key=True)
@@ -69,7 +70,7 @@ class Article(models.Model):
     )
 
     def __str__(self):
-        return self.title
+        return self.title + '-->' + self.user.username
 
 class Article2Tag(models.Model):
     nid = models.AutoField(primary_key=True)
@@ -98,4 +99,18 @@ class ArticleUpDown(models.Model):
         unique_together = [
             ('article', 'user'),
         ]
+
+class Comment(models.Model):
+    """
+    评论表
+    """
+    nid = models.AutoField(primary_key=True)
+    article = models.ForeignKey(verbose_name='评论文章', to='Article', to_field='nid', on_delete=models.CASCADE)
+    user = models.ForeignKey(verbose_name='评论者', to='UserInfo', to_field='nid', on_delete=models.CASCADE)
+    content = models.CharField(verbose_name='评论内容', max_length=255)
+    create_time = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    parent_comment = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.content
 

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}
+登录
+{% endblock %}
+
+{% block login_content %}
+    <li><a href="{% url 'register' %}">注册</a></li>
+{% endblock %}
+
+{% block content %}
+<div class="col-md-6 col-md-push-3">
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">登录</h3>
+        </div>
+        <div class="panel-body">
+            <form class="form-horizontal">
+                {% csrf_token %}
+                <div class="form-group form-group-sm">
+                    <label for="user" class="col-sm-2 control-label">用户名</label>
+                    <div class="col-sm-10">
+                        {{ loginForm.user }} <span></span>
+                    </div>
+                </div>
+                <div class="form-group form-group-sm">
+                    <label for="pwd" class="col-sm-2 control-label">密码</label>
+                    <div class="col-sm-10">
+                        {{ loginForm.pwd }}<span></span>
+                    </div>
+                </div>
+                <div class="form-group form-group-sm">
+                    <label for="valid_code" class="col-sm-2 control-label">验证码</label>
+                    <div class="col-sm-10">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                {{ loginForm.valid_code }}<span></span>
+                            </div>
+                            <div class="col-sm-6">
+                                <img src="{% url 'get_valid_img' %}" width="210" height="40" id="valid_img">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group form-group-sm">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox"> 记住我
+                            </label>
+                        </div>
+                    </div>
+                  </div>
+                <div class="form-group form-group-sm">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="button" class="btn btn-default login_btn">提交</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $('#valid_img').click(function () {
+            $(this)[0].src += '?'
+        });
+
+        $('.login_btn').click(function () {
+            $.ajax({
+                url:'{% url "login" %}',
+                type:'post',
+                data:{
+                    csrfmiddlewaretoken:$('[name="csrfmiddlewaretoken"]').val(),
+                    user:$('#id_user').val(),
+                    pwd:$('#id_pwd').val(),
+                    valid_code:$('#id_valid_code').val()
+                },
+                success:function (data) {
+                    if(data.user){
+                        location.href = '{{ next_url }}';
+                    }else{
+                        $('span').html('');
+                        $('.form-group span ').parent().removeClass('has-error');
+                        $.each(data.error_msg,function (k,v) {
+                            $('#id_'+k).next().css('color','red').html(v[0]).parent().addClass('has-error');
+                        })
+                    }
+                }
+            })
+        })
+    </script>
+
+{% endblock %}

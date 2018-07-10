@@ -1,6 +1,8 @@
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render,HttpResponse,redirect
 from django.contrib import auth
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from app01.myform import *
 from PIL import Image, ImageDraw, ImageFont
 import random
 from io import BytesIO
@@ -23,7 +25,7 @@ def get_valid_img(request):
 
     image = Image.new(mode='RGB', size=(260, 40), color=get_random_color())
     draw = ImageDraw.Draw(image, mode='RGB')
-    font = ImageFont.truetype('book_app/static/kumo.ttf', 32)
+    font = ImageFont.truetype('static/font/kumo.ttf', 32)
     valid_code_str = ''
     for i in range(1, 6):
         char = get_random_char()
@@ -32,17 +34,54 @@ def get_valid_img(request):
     f = BytesIO()
     image.save(f, 'png')
     data = f.getvalue()
-    print(valid_code_str)
     request.session['valid_code_str'] = valid_code_str
     return HttpResponse(data)
 
 def log_in(request):
-    pass
+    if request.is_ajax():
+        loginForm = LoginForm(request,request.POST)
+        loginResponse = {'user': None,'error_msg': ''}
+        if loginForm.is_valid():
+            user = auth.authenticate(username=loginForm.cleaned_data.get('user'), password=loginForm.cleaned_data.get('pwd'))
+            if user:
+                auth.login(request,user)
+                loginResponse['user'] = user.username
+            else:
+                loginResponse['error_msg'] = {'pwd':['密码错误！']}
+        else:
+            loginResponse['error_msg'] = loginForm.errors
+        return JsonResponse(loginResponse)
+    loginForm = LoginForm(request)
+    next_url = request.GET.get('next', '/index/')
+    return render(request, 'login.html', {'loginForm': loginForm, 'next_url': next_url})
 
+@login_required
 def log_out(request):
-    pass
+    auth.logout(request)
+    return redirect('/login/')
 
 def register(request):
-    pass
+    if request.is_ajax():
+        regForm = RegForm(request,request.POST)
+        regResponse = {'user': None, 'errors': None}
+        if regForm.is_valid():
+            reg_dict = {}
+            reg_dict['username'] = regForm.cleaned_data.get('user')
+            reg_dict['password'] = regForm.cleaned_data.get('pwd')
+            reg_dict['email'] = regForm.cleaned_data.get('email')
+            avatar_obj = request.FILES.get('file_img')
+            if avatar_obj:
+                reg_dict['avatar'] = avatar_obj
+            UserInfo.objects.create_user(**reg_dict)
+            regResponse['user'] = reg_dict['username']
+        else:
+            regResponse['errors'] = regForm.errors
+        return JsonResponse(regResponse)
+    regForm = RegForm(request)
+    return render(request, 'register.html', {'regForm': regForm})
+
+def index(request):
+    return render(request, 'index.html')
+
 
 
