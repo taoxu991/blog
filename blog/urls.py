@@ -29,5 +29,5 @@ urlpatterns = [
     re_path(r'^$', app_views.index),
 
     # media配置
-    re_path(r'media/(?P<path>.*)$',serve,{'document_root':settings.MEDIA_ROOT}),
+    re_path(r'media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
