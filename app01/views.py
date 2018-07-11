@@ -9,6 +9,7 @@ from io import BytesIO
 
 # Create your views here.
 
+
 def get_valid_img(request):
     """
         生成动态验证码
@@ -37,6 +38,7 @@ def get_valid_img(request):
     request.session['valid_code_str'] = valid_code_str
     return HttpResponse(data)
 
+
 def log_in(request):
     if request.is_ajax():
         loginForm = LoginForm(request,request.POST)
@@ -55,10 +57,12 @@ def log_in(request):
     next_url = request.GET.get('next', '/index/')
     return render(request, 'login.html', {'loginForm': loginForm, 'next_url': next_url})
 
+
 @login_required
 def log_out(request):
     auth.logout(request)
     return redirect('/login/')
+
 
 def register(request):
     if request.is_ajax():
@@ -79,6 +83,7 @@ def register(request):
         return JsonResponse(regResponse)
     regForm = RegForm(request)
     return render(request, 'register.html', {'regForm': regForm})
+
 
 def index(request):
     return render(request, 'index.html')
