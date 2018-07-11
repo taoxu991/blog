@@ -14,6 +14,7 @@ urlpatterns = [
 
     re_path(r'^(?P<username>\w+)/articles/(?P<article_id>\d+)$', app_views.article_detail),
     re_path(r'^(?P<username>\w+)/articles/(?P<condition>tag|category|archive)/(?P<param>.*)/$', app_views.home_site),
+    re_path(r'^(?P<username>\w+)/$', app_views.home_site),
 
 
 ]

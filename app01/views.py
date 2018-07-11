@@ -68,7 +68,7 @@ def log_out(request):
 
 def register(request):
     if request.is_ajax():
-        regForm = RegForm(request,request.POST)
+        regForm = RegForm(request, request.POST)
         regResponse = {'user': None, 'errors': None}
         if regForm.is_valid():
             reg_dict = {}
@@ -94,4 +94,20 @@ def index(request):
     return render(request, 'index.html', {'article_list': paginator.res_list, 'page_html': paginator.html})
 
 
-
+def home_site(request, username, **kwargs):
+    user = UserInfo.objects.filter(username=username).first()
+    if not user:
+        return render(request, '404.html')
+    blog = user.blog
+    article_list = Article.objects.filter(user=user)
+    if kwargs:
+        condition = kwargs.get('condition')
+        param = kwargs.get('param')
+        if condition == 'category':
+            article_list = article_list.filter(category__title=param)
+        elif condition == 'tag':
+            article_list = article_list.filter(tags__title=param)
+        else:
+            year, month = param.split('/')
+            article_list = article_list.filter(create_time__year=year,create_time__month=month)
+    return render(request, 'home_site.html')
