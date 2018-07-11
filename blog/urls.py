@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,re_path
+from django.urls import path,re_path,include
 from django.views.static import serve
 from blog import settings
 from app01 import views as app_views
@@ -27,7 +27,7 @@ urlpatterns = [
     path('index/', app_views.index),
     path('get_valid_img/', app_views.get_valid_img, name='get_valid_img'),
     re_path(r'^$', app_views.index),
-
+    re_path(r'blog/',include('app01.urls')),
     # media配置
     re_path(r'media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]

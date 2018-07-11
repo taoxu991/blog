@@ -3,6 +3,8 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from app01.myform import *
+from app01.models import *
+from app01.page import *
 from PIL import Image, ImageDraw, ImageFont
 import random
 from io import BytesIO
@@ -86,7 +88,10 @@ def register(request):
 
 
 def index(request):
-    return render(request, 'index.html')
+    current_page = int(request.GET.get('page',1))
+    article_list = Article.objects.all()
+    paginator = CustomPagination(current_page, "", article_list, 5)
+    return render(request, 'index.html', {'article_list': paginator.res_list, 'page_html': paginator.html})
 
 
 
