@@ -3,6 +3,10 @@
    margin-bottom: 20px;
 }
 
+#digg_box {
+    overflow: hidden;
+}
+
 #div_digg {
     float: right;
     margin-bottom: 10px;
@@ -36,6 +40,13 @@
     padding-top: 5px;
 }
 
+#digg_tips{
+    clear: both;
+    margin-top: 5px;
+    margin-left: 0;
+    font-size: 12px;
+    color: gray;
+}
 
 input.author{
     background-image: url("/static/font/icon_form.gif");

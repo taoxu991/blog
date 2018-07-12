@@ -9,15 +9,15 @@
             {{ article_obj.content|safe }}
         </div>
 
-        <div class="clearfix">
-            <div id="div_digg" class="clearfix">
+        <div id="digg_box">
+            <div id="div_digg">
                 <div class="diggit action">
                     <span class="diggnum" id="digg_count">{{ article_obj.up_count }}</span>
                 </div>
                 <div class="buryit action">
                     <span class="burynum" id="bury_count">{{ article_obj.down_count }}</span>
                 </div>
-                <div class="clear"></div>
+{#                <div class="clear"></div>#}
                 <div class="diggword" id="digg_tips" style="color: red;"></div>
             </div>
         </div>
@@ -146,7 +146,7 @@
                         }
                     })
                 }else{
-                    location.href='/login/?next={{ request.request.get_full_path }}'
+                    location.href='/login/?next={{ request.get_full_path }}'
                 }
             });
 
@@ -158,7 +158,7 @@
                      $('#comment_content').val(val);
                      pid = $(this).attr("comment_pk");
                  }else{
-                      location.href='/login/?next={{ request.request.get_full_path }}'
+                      location.href='/login/?next={{ request.get_full_path }}'
                  }
             });
         </script>
