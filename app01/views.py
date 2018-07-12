@@ -2,12 +2,15 @@ from django.shortcuts import render,HttpResponse,redirect
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db import transaction
+from django.db.models import F
 from app01.myform import *
 from app01.models import *
 from app01.page import *
 from PIL import Image, ImageDraw, ImageFont
 import random
 from io import BytesIO
+import json
 
 # Create your views here.
 
@@ -56,6 +59,7 @@ def log_in(request):
             loginResponse['error_msg'] = loginForm.errors
         return JsonResponse(loginResponse)
     loginForm = LoginForm(request)
+    request.get_full_path()
     next_url = request.GET.get('next', '/index/')
     return render(request, 'login.html', {'loginForm': loginForm, 'next_url': next_url})
 
@@ -89,7 +93,7 @@ def register(request):
 
 def index(request):
     current_page = int(request.GET.get('page',1))
-    article_list = Article.objects.all()
+    article_list = Article.objects.all().order_by('nid')
     paginator = CustomPagination(current_page, "", article_list, 5)
     return render(request, 'index.html', {'article_list': paginator.res_list, 'page_html': paginator.html})
 
@@ -99,7 +103,7 @@ def home_site(request, username, **kwargs):
     if not user:
         return render(request, '404.html')
     blog = user.blog
-    article_list = Article.objects.filter(user=user)
+    article_list = Article.objects.filter(user=user).order_by('nid')
     if kwargs:
         condition = kwargs.get('condition')
         param = kwargs.get('param')
@@ -110,4 +114,71 @@ def home_site(request, username, **kwargs):
         else:
             year, month = param.split('/')
             article_list = article_list.filter(create_time__year=year,create_time__month=month)
-    return render(request, 'home_site.html')
+    current_page = int(request.GET.get('page', 1))
+    paginator = CustomPagination(current_page, "", article_list, 5)
+    return render(request, 'blog/home_site.html', {'user': user, 'blog': blog, 'article_list': paginator.res_list, 'page_html': paginator.html})
+
+
+def article_detail(request, username, article_id):
+    user = UserInfo.objects.filter(username=username).first()
+    blog = user.blog
+    article_obj = Article.objects.filter(nid=article_id).first()
+    comment_list = Comment.objects.filter(article=article_obj)
+
+    return render(request, 'blog/article_detail.html', {'user': user, 'blog': blog, 'article_obj': article_obj, 'comment_list': comment_list})
+
+
+def digg(request):
+    article_id = request.POST.get('article_id')
+    is_up = json.loads(request.POST.get('is_up'))
+    user_id = request.user.pk
+    obj = ArticleUpDown.objects.filter(user_id=user_id, article_id=article_id).first()
+    jsonResponse = {'state': True}
+    if not obj:
+        res_obj = ArticleUpDown.objects.create(user_id=user_id, article_id=article_id, is_up=is_up)
+        article_obj = Article.objects.filter(nid=article_id)
+        if is_up:
+            article_obj.update(up_count=F('up_count')+1)
+        else:
+            article_obj.update(down_count=F('down_count')+1)
+    else:
+        jsonResponse['state'] = False
+        jsonResponse['handled'] = obj.is_up
+    return JsonResponse(jsonResponse)
+
+
+def comment(request):
+    article_id = request.POST.get('article_id')
+    pid = request.POST.get('pid')
+    content = request.POST.get('content')
+    user_id = request.user.pk
+    article_obj = Article.objects.filter(nid=article_id).first()
+
+    with transaction.atomic():
+        comment_obj = Comment.objects.create(user_id=user_id, article_id=article_id, content=content, parent_comment_id=pid)
+        Article.objects.filter(nid=article_id).update(comment_count=F('comment_count') + 1)
+    jsonResponse = {}
+    jsonResponse['create_time'] = comment_obj.create_time.strftime('%Y-%m-%d %X')
+    jsonResponse['username'] = request.user.username
+    jsonResponse['content'] = content
+    jsonResponse['comment_id'] = comment_obj.nid
+
+    # 发送邮件
+
+    from django.core.mail import send_mail
+    from blog import settings
+    # send_mail(
+    #     "您的文章%s新增了一条评论内容"%article_obj.title,
+    #     content,
+    #     settings.EMAIL_HOST_USER,
+    #     ["916852314@qq.com"]
+    # )
+    import threading
+    t = threading.Thread(target=send_mail, args=('您的文章%s新增了一条评论内容' % article_obj.title,
+                                                 content,
+                                                 settings.EMAIL_HOST_USER,
+                                                 ['2580151116@qq.com']))
+    t.start()
+    return JsonResponse(jsonResponse)
+
+
