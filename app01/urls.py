@@ -3,11 +3,14 @@ from app01 import views as app_views
 
 urlpatterns = [
     # 文本编辑器上传图片url
-    # re_path(r'upload/', app_views.upload),
+    re_path(r'upload/', app_views.upload),
 
     # 后台管理 url
-    # re_path(r'blog_manage/$', app_views.blog_manage),
-    # re_path(r'blog_manage/add_article/$', app_views.add_article),
+    re_path(r'blog_manage/$', app_views.blog_manage),
+    re_path(r'blog_manage/add_article/$', app_views.add_article),
+    re_path(r'blog_manage/edit_article/(?P<article_id>\d+)$', app_views.edit_article),
+    re_path(r'blog_manage/delete_article/(?P<article_id>\d+)$', app_views.delete_article),
+
     re_path(r'digg/', app_views.digg),
     re_path(r'comment/', app_views.comment),
     # re_path(r'get_comment_tree/', app_views.get_comment_tree),

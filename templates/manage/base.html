@@ -2,9 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>博客后台管理 - 博客园</title>
+
+    <link rel="stylesheet" href="/static/blog/bs/css/bootstrap.css">
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/blog/bs/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="/static/blog/css/backend.css">
+        <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            padding-top: 70px;
+        }
+
+    </style>
 </head>
 <body>
+
+{#<div class="header">#}
+{#    <p class="title">#}
+{#        后台管理#}
+{#        <a class="" href="">主页</a>#}
+{#        <a class="info" href="{% url 'logout' %}">注销</a>#}
+{#        <span class="info"><span class="glyphicon glyphicon-user"></span>&nbsp;&nbsp;{{ request.user.username }}</span>#}
+{#    </p>#}
+{#</div>#}
+
+<nav class="navbar navbar-fixed-top navbar-inverse">
+    <div class="container">
+		<div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+			<a class="navbar-brand" href="#">后台管理</a>
+		</div>
+        <div id="navbar" class="navbar-collapse collapse" aria-expanded="false">
+            <ul class="nav navbar-nav">
+				<li><a href="/">博客园</a></li>
+                <li><a href="/blog/{{ request.user }}/">首页</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">当前用户：{{ request.user }}</a></li>
+                    <li class="divider"></li>
+                    <li><a href="{% url 'logout' %}">登出</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+
+<div class="container">
+    <div class="col-md-3">
+        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" role="tab" id="headingOne">
+                    <h4 class="panel-title">
+                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne"
+                           aria-expanded="true" aria-controls="collapseOne">
+                            操作
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                    <div class="panel-body">
+                        <p><a href="/blog/blog_manage/">管理文章</a></p>
+                        <p><a href="/blog/blog_manage/add_article/">添加文章</a></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div class="col-md-9">
+
+
+
+                    {% block content %}
+
+                    {% endblock %}
+
+
+    </div>
+</div>
 
 </body>
 </html>

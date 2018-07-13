@@ -4,13 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import F
+from blog import settings
 from app01.myform import *
 from app01.models import *
 from app01.page import *
 from PIL import Image, ImageDraw, ImageFont
 import random
 from io import BytesIO
-import json
+import json,os
 
 # Create your views here.
 
@@ -181,4 +182,65 @@ def comment(request):
     t.start()
     return JsonResponse(jsonResponse)
 
+
+
+@login_required
+def blog_manage(request):
+    article_list = Article.objects.filter(user=request.user)
+    return render(request, 'manage/manage.html', {'article_list': article_list})
+
+
+from bs4 import BeautifulSoup
+@login_required
+def add_article(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+
+        soup = BeautifulSoup(content, 'html.parser')
+        for tag in soup.find_all():
+            if tag.name == 'script':
+                tag.decompose()
+
+        desc = soup.text[0:150] + '...'
+        Article.objects.create(title=title, desc=desc, content=str(soup), user=request.user)
+        return redirect('/blog/blog_manage/')
+    return render(request, 'manage/add_article.html')
+
+
+@login_required
+def edit_article(request, article_id):
+    article_obj = Article.objects.filter(nid=article_id)
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+
+        soup = BeautifulSoup(content, 'html.parser')
+        for tag in soup.find_all():
+            if tag.name == 'script':
+                tag.decompose()
+
+        desc = soup.text[0:150] + '...'
+        article_obj.update(title=title, desc=desc, content=str(soup), user=request.user)
+        return redirect('/blog/blog_manage/')
+    article_obj = article_obj.first()
+    return render(request, 'manage/edit_article.html', {'article_obj': article_obj})
+
+
+@login_required
+def delete_article(request, article_id):
+    Article.objects.filter(nid=article_id).delete()
+    return redirect('/blog/blog_manage/')
+
+def upload(request):
+    img_obj = request.FILES.get('upload_img')
+    path = os.path.join(settings.MEDIA_ROOT, 'article_img', img_obj.name)
+    with open(path, 'wb') as f:
+        for line in img_obj:
+            f.write(line)
+    jsonResponse = {
+        'error': 0,
+        'url': '/media/article_img/%s' % img_obj.name
+    }
+    return JsonResponse(jsonResponse)
 
