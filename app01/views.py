@@ -129,6 +129,7 @@ def article_detail(request, username, article_id):
     return render(request, 'blog/article_detail.html', {'user': user, 'blog': blog, 'article_obj': article_obj, 'comment_list': comment_list})
 
 
+# @login_required
 def digg(request):
     article_id = request.POST.get('article_id')
     is_up = json.loads(request.POST.get('is_up'))
@@ -148,12 +149,12 @@ def digg(request):
     return JsonResponse(jsonResponse)
 
 
+# @login_required
 def comment(request):
     article_id = request.POST.get('article_id')
     pid = request.POST.get('pid')
     content = request.POST.get('content')
     user_id = request.user.pk
-    article_obj = Article.objects.filter(nid=article_id).first()
 
     with transaction.atomic():
         comment_obj = Comment.objects.create(user_id=user_id, article_id=article_id, content=content, parent_comment_id=pid)
@@ -166,32 +167,31 @@ def comment(request):
 
     # 发送邮件
 
-    from django.core.mail import send_mail
-    from blog import settings
-    # send_mail(
-    #     "您的文章%s新增了一条评论内容"%article_obj.title,
-    #     content,
-    #     settings.EMAIL_HOST_USER,
-    #     ["916852314@qq.com"]
-    # )
-    import threading
-    t = threading.Thread(target=send_mail, args=('您的文章%s新增了一条评论内容' % article_obj.title,
-                                                 content,
-                                                 settings.EMAIL_HOST_USER,
-                                                 ['2580151116@qq.com']))
-    t.start()
+    # from django.core.mail import send_mail
+    # from blog import settings
+    # # send_mail(
+    # #     "您的文章%s新增了一条评论内容"%article_obj.title,
+    # #     content,
+    # #     settings.EMAIL_HOST_USER,
+    # #     ["916852314@qq.com"]
+    # # )
+    # import threading
+    # t = threading.Thread(target=send_mail, args=('您的文章%s新增了一条评论内容' % article_obj.title,
+    #                                              content,
+    #                                              settings.EMAIL_HOST_USER,
+    #                                              ['2580151116@qq.com']))
+    # t.start()
     return JsonResponse(jsonResponse)
 
 
-
-@login_required
+# @login_required
 def blog_manage(request):
     article_list = Article.objects.filter(user=request.user)
     return render(request, 'manage/manage.html', {'article_list': article_list})
 
 
 from bs4 import BeautifulSoup
-@login_required
+# @login_required
 def add_article(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -208,7 +208,7 @@ def add_article(request):
     return render(request, 'manage/add_article.html')
 
 
-@login_required
+# @login_required
 def edit_article(request, article_id):
     article_obj = Article.objects.filter(nid=article_id)
     if request.method == 'POST':
@@ -227,11 +227,13 @@ def edit_article(request, article_id):
     return render(request, 'manage/edit_article.html', {'article_obj': article_obj})
 
 
-@login_required
+# @login_required
 def delete_article(request, article_id):
     Article.objects.filter(nid=article_id).delete()
     return redirect('/blog/blog_manage/')
 
+
+# @login_required
 def upload(request):
     img_obj = request.FILES.get('upload_img')
     path = os.path.join(settings.MEDIA_ROOT, 'article_img', img_obj.name)
