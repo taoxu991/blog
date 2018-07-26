@@ -129,7 +129,7 @@ def article_detail(request, username, article_id):
     return render(request, 'blog/article_detail.html', {'user': user, 'blog': blog, 'article_obj': article_obj, 'comment_list': comment_list})
 
 
-# @login_required
+@login_required
 def digg(request):
     article_id = request.POST.get('article_id')
     is_up = json.loads(request.POST.get('is_up'))
@@ -149,7 +149,7 @@ def digg(request):
     return JsonResponse(jsonResponse)
 
 
-# @login_required
+@login_required
 def comment(request):
     article_id = request.POST.get('article_id')
     pid = request.POST.get('pid')
@@ -184,14 +184,14 @@ def comment(request):
     return JsonResponse(jsonResponse)
 
 
-# @login_required
+@login_required
 def blog_manage(request):
     article_list = Article.objects.filter(user=request.user)
     return render(request, 'manage/manage.html', {'article_list': article_list})
 
 
 from bs4 import BeautifulSoup
-# @login_required
+@login_required
 def add_article(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -208,7 +208,7 @@ def add_article(request):
     return render(request, 'manage/add_article.html')
 
 
-# @login_required
+@login_required
 def edit_article(request, article_id):
     article_obj = Article.objects.filter(nid=article_id)
     if request.method == 'POST':
@@ -227,13 +227,13 @@ def edit_article(request, article_id):
     return render(request, 'manage/edit_article.html', {'article_obj': article_obj})
 
 
-# @login_required
+@login_required
 def delete_article(request, article_id):
     Article.objects.filter(nid=article_id).delete()
     return redirect('/blog/blog_manage/')
 
 
-# @login_required
+@login_required
 def upload(request):
     img_obj = request.FILES.get('upload_img')
     path = os.path.join(settings.MEDIA_ROOT, 'article_img', img_obj.name)
@@ -246,3 +246,67 @@ def upload(request):
     }
     return JsonResponse(jsonResponse)
 
+import hashlib
+import json
+from lxml import etree
+from django.utils.encoding import smart_str
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+# from auto_reply.views import auto_reply_main # 修改这里
+ 
+WEIXIN_TOKEN = '84f16d2f5410cedd717c2df8c83cc863'
+ 
+@csrf_exempt
+def weixin_main(request):
+    """
+    所有的消息都会先进入这个函数进行处理，函数包含两个功能，
+    微信接入验证是GET方法，
+    微信正常的收发消息是用POST方法。
+    """
+    if request.method == "GET":
+        signature = request.GET.get("signature", None)
+        timestamp = request.GET.get("timestamp", None)
+        nonce = request.GET.get("nonce", None)
+        echostr = request.GET.get("echostr", None)
+        token = WEIXIN_TOKEN
+        tmp_list = [token, timestamp, nonce]
+        tmp_list.sort()
+        tmp_str = ''.join([s for s in tmp_list]).encode('utf-8')
+        tmp_str = hashlib.sha1(tmp_str).hexdigest()
+        if tmp_str == signature:
+            return HttpResponse(echostr)
+        else:
+            return HttpResponse("weixin  index")
+    else:
+        xml_str = smart_str(request.body)
+        request_xml = etree.fromstring(xml_str)
+        msgType = request_xml.find("MsgType").text
+        fromUser = request_xml.find("FromUserName").text
+        toUser = request_xml.find("ToUserName").text
+        if msgType == "text":
+            content = request_xml.find("Content").text
+        else:
+            content = "徐涛牛逼哈，都想跑了！"
+        replyMsg = TextMsg(fromUser, toUser, content)
+        return HttpResponse(replyMsg.send().encode('utf-8'))
+
+import time
+class TextMsg():
+    def __init__(self, toUserName, fromUserName, content):
+        self.__dict = dict()
+        self.__dict['ToUserName'] = toUserName
+        self.__dict['FromUserName'] = fromUserName
+        self.__dict['CreateTime'] = int(time.time())
+        self.__dict['Content'] = content
+
+    def send(self):
+        XmlForm = """
+        <xml>
+        <ToUserName><![CDATA[{ToUserName}]]></ToUserName>
+        <FromUserName><![CDATA[{FromUserName}]]></FromUserName>
+        <CreateTime>{CreateTime}</CreateTime>
+        <MsgType><![CDATA[text]]></MsgType>
+        <Content><![CDATA[{Content}]]></Content>
+        </xml>
+        """
+        return XmlForm.format(**self.__dict)

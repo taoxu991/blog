@@ -21,6 +21,7 @@ from app01 import views as app_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('weixin', app_views.weixin_main),
     path('login/', app_views.log_in, name='login'),
     path('logout/', app_views.log_out, name='logout'),
     path('register/', app_views.register, name='register'),
